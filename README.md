@@ -7,7 +7,7 @@
 
 ## Requirements
 
-		Python3 - PyQt5, ssdeep, python-magic, requests, M2Crypto, and pefile 
+		Python3 - PyQt5, ssdeep, python-magic, requests, M2Crypto, yara-python and pefile 
 
 ## Arguments:
 
