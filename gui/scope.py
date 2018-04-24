@@ -11,15 +11,9 @@ from datetime import datetime
 from M2Crypto import SMIME, X509, BIO, m2
 
 #import vtow as vt
-
-def convert_char(char):
-    if char in string.ascii_letters or char in string.digits or char in string.punctuation or char in string.whitespace:
-        return char
-    else:
-        return ''
   
 def convert_to_printable(s):
-    return ''.join([convert_char(c) for c in s])
+    return str(s.decode('utf-8'))
 
 def convert(input):
 	 if isinstance(input, dict):
@@ -31,30 +25,40 @@ def convert(input):
 	 else:
 		 return input
 
+#updated for python3
 def get_strings(filename):
     if filename:
-        with open(filename,'rb') as fs:
-            fraw=fs.read()
-            strings = re.findall('[^\x00-\x1F\x7F-\xFF]{4,}',fraw)
-            urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',fraw)
+        with open(filename, encoding="utf-8", errors="ignore") as fin:
+            fraw = fin.read()
+
+        strings = re.findall('[^\x00-\x1F\x7F-\xFF]{4,}',fraw)
+        urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',fraw)
         return {"strings": strings, "urls": urls}
 
-
+#updated for python3
 def get_hex(filename):
     with open(filename,'rb') as fin:
-        data=binascii.hexlify(fin.read()).upper()
+        data=binascii.hexlify(fin.read()).upper().decode("utf-8")
+    
+    holder = []
+    for i in range(0, len(data), 2):
+        hd = "{}{}".format(data[i],data[i+1])
+        if ord(chr(int(hd, 16))) > 126 or ord(chr(int(hd, 16))) < 32:
+            hd = '.'
+        else:
+            hd = chr(int(hd, 16))
+        holder.append(hd)
+    holder = ' '.join(holder)
+
+
     i=0
     linehexcount=0
     hexdump=[]
     for j in range(32,len(data)+32,32):
-        line=' '.join(data[i:j][x:x+2] for x in range(0,len(data[i:j]),2))
-        line2=''.join([y[2:4]+y[0:2] for y in line.split()]).decode('hex')
-        tline=list(line2)
-        for ind in range(0,len(tline)):
-            if ord(tline[ind]) > 126 or ord(tline[ind]) < 32:
-                tline[ind]='.'
+        line1 = data[i:i+32]
+        line2 = holder[i:i+32]
         counter='{0:07X}'.format(linehexcount)
-        nline='{}  {:48}  {:48}'.format(counter,line,''.join(tline))
+        nline='{}  {:24}  {:48}'.format(counter, line1, line2)
         hexdump.append(nline)
 
         i=j
@@ -80,53 +84,53 @@ def get_md5(filename):
         return str(pesha.hexdigest()).upper()
 
 def get_file_magic(path):
-    return str(magic.from_file(path))
+    m = magic.open(magic.MAGIC_MIME)
+    m.load()
+    return str(m.file(path))
 
 def get_ssdeep(path):
     try:
-        with open(path,'r') as fin:
+        with open(path,'rb') as fin:
             fraw = fin.read()
         ssd=ssdeep.hash(fraw)
         return ssd
     except Exception as err:
-        print err
+        print('SSDEEP ERRROR: {}'.format(err))
         return None
 
 def get_hashes(path):
     return {"md5": get_md5(path), "sha1": get_sha1(path), "sha256": get_sha256(path), "ssdeep": get_ssdeep(path)}
 
+#updated for python3
 def get_sections(pe):
-    try:
-        header='{:<8} {:>10} {:>10} {:>10} {:>10} {:^30} \t{:<10}\n'.format('Section','VirtSize','VirtAddr','PhysSize','PhysAddr','MD5','Characteristics')
-        data=[header]
-        for section in pe.sections:
-            perm=None
-            if '0x2' in str(section).split()[-1]:
-                perm='{}MEM_EXECUTE\n'
-            elif '0x4' in str(section).split()[-1]:
-                perm='{}MEM_READ\n'
-            elif '0x8' in str(section).split()[-1]:
-                perm='{}MEM_WRITE\n'
-            elif '0x6' in str(section).split()[-1]:
-                perm='{}MEM_READ|MEM_EXECUTE\n'
-            elif '0xA' in str(section).split()[-1]:
-                perm='{}MEM_WRITE|MEM_EXECUTE\n'
-            elif '0xC' in str(section).split()[-1]:
-                perm='{}MEM_READ|MEM_WRITE\n'
-            elif '0xE' in str(section).split()[-1]:
-                perm='{}MEM_READ|MEM_WRITE|MEM_EXECUTE\n'
-            
-            if perm:
-                if '020' in str(section).split()[-1] or '060' in str(section).split()[-1] or '0A0' in str(section).split()[-1]:
-                    perm=perm.format('CODE|')
-                else:
-                    perm=perm.format('')
-            
-            data.append('{:<8} {:>10} {:>10} {:>10} {:>10} {:>30} {:<10}'.format(section.Name.strip('\x00'),hex(section.Misc_VirtualSize),hex(section.VirtualAddress),hex(section.Misc_PhysicalAddress),hex(section.PointerToRawData),section.get_hash_md5(),perm))
+    header='{:<8} {:>10} {:>10} {:>10} {:>10} {:^30} \t{:<10}\n'.format('Section','VirtSize','VirtAddr','PhysSize','PhysAddr','MD5','Characteristics')
+    data=[header]
+    for section in pe.sections:
+        perm=None
+        if '0x2' in str(section).split()[-1]:
+            perm='{}MEM_EXECUTE\n'
+        elif '0x4' in str(section).split()[-1]:
+            perm='{}MEM_READ\n'
+        elif '0x8' in str(section).split()[-1]:
+            perm='{}MEM_WRITE\n'
+        elif '0x6' in str(section).split()[-1]:
+            perm='{}MEM_READ|MEM_EXECUTE\n'
+        elif '0xA' in str(section).split()[-1]:
+            perm='{}MEM_WRITE|MEM_EXECUTE\n'
+        elif '0xC' in str(section).split()[-1]:
+            perm='{}MEM_READ|MEM_WRITE\n'
+        elif '0xE' in str(section).split()[-1]:
+            perm='{}MEM_READ|MEM_WRITE|MEM_EXECUTE\n'
+        
+        if perm:
+            if '020' in str(section).split()[-1] or '060' in str(section).split()[-1] or '0A0' in str(section).split()[-1]:
+                perm=perm.format('CODE|')
+            else:
+                perm=perm.format('')
 
-        return data
-    except Exception:
-        return None
+        data.append('{:<8} {:>10} {:>10} {:>10} {:>10} {:>30} {:<10}'.format(section.Name.decode("utf-8"),str(hex(int(section.Misc_VirtualSize))),str(hex(int(section.VirtualAddress))),str(hex(int(section.Misc_PhysicalAddress))),str(hex(int(section.PointerToRawData))),str(section.get_hash_md5()),perm))
+
+    return data
 
 class Imports:
     def __init__(self):
@@ -173,7 +177,7 @@ class Imports:
             for entry in pe.DIRECTORY_ENTRY_IMPORT:
                 for imp in entry.imports:
                     if imp.name:
-                        imports.append(imp.name)
+                        imports.append(imp.name.decode('utf-8'))
             pe.close()
             return imports
         except Exception:
@@ -190,7 +194,7 @@ def get_exports(filename):
         exports=[]
         for exp in pe.DIRECTORY_ENTRY_EXPORT.symbols:
             if exp.name:
-                exports.append('{}: {}'.format(exp.name,exp.ordinal))
+                exports.append('{}: {}'.format(exp.name.decode('utf-8'),exp.ordinal))
         pe.close()
         return exports
     except:
@@ -288,7 +292,8 @@ def get_stringtable(filename):
                 elif hasattr(entry, 'Var'):
                     for vent in entry.Var:
                         if hasattr(vent, 'entry'):
-                            ret.append('{}: {}'.format(convert_to_printable(vent.entry.keys()[0]),convert_to_printable(vent.entry.values()[0])))
+                            somevar = next(iter(vent.entry.items()))
+                            ret.append('{}: {}'.format(somevar[0].decode("utf-8"),somevar[1]))
     
     return '\n'.join(ret)
 

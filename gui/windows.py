@@ -6,8 +6,8 @@ from PyQt5.QtCore import *
 from PIL import Image
 from PIL.ImageQt import ImageQt
 
-from worker import *
-from scope import *
+from gui.worker import *
+from gui.scope import *
 
 class DescriptionTabs(QTabWidget):
     def __init__(self):
@@ -49,7 +49,7 @@ class StaticWindow(QTabWidget):
         staticLayout = QVBoxLayout(self)
 
         self.tab1 = QScrollArea()
-        self.tab1.setStyleSheet("font-size:10px;")
+        self.tab1.setStyleSheet("font-size:12px;")
         self.addTab(self.tab1, 'Static')
         self.tab1.setWidgetResizable(True)
 
@@ -232,7 +232,7 @@ class StringsWindow(QTabWidget):
 
         self.tab1 = QScrollArea()
         self.tab1.setWidgetResizable(True)
-        self.tab1.setStyleSheet("font-size:10px;")
+        self.tab1.setStyleSheet("font-size:12px;")
         self.addTab(self.tab1, "Strings")
 
         tab1w = QWidget()
@@ -260,7 +260,7 @@ class StringsWindow(QTabWidget):
 
         self.tab2 = QScrollArea()
         self.tab2.setWidgetResizable(True)
-        self.tab2.setStyleSheet("font-size:10px;")
+        self.tab2.setStyleSheet("font-size:12px;")
         self.addTab(self.tab2, "Urls")
         tab2w = QWidget()
         tab2Layout = QVBoxLayout(tab2w)
@@ -384,9 +384,9 @@ class HexWindow(QWidget):
         layout = QVBoxLayout(self)
 
         self.edit = QPlainTextEdit()
-        self.edit.setStyleSheet("font-family:Courier;background: #333333; font-size: 10px;")
+        self.edit.setStyleSheet("font-family:Courier;background: #333333; font-size: 12px;")
         self.edit.setReadOnly(True)
-        self.edit.setMinimumWidth(500)
+        self.edit.setMinimumWidth(600)
 
         scroll.setWidget(self.edit)
         layout.addWidget(scroll)
@@ -574,9 +574,9 @@ class SectionsWindow(QWidget):
         layout = QVBoxLayout(self)
 
         self.edit = QTextBrowser()
-        self.edit.setStyleSheet("font-family:Courier;background: #333333; font-size: 10px;")
+        self.edit.setStyleSheet("font-family:Courier;background: #333333; font-size: 12px;")
         self.edit.setReadOnly(True)
-        self.edit.setMinimumWidth(800)
+        self.edit.setMinimumWidth(840)
 
         scroll.setWidget(self.edit)
         layout.addWidget(scroll)
