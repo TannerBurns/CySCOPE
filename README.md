@@ -5,6 +5,10 @@
 
 		Static Characterstics Of Portable Executables
 
+## Requirements
+
+		Python3 - PyQt5, ssdeep, python-magic, requests, M2Crypto, and pefile 
+
 ## Arguments:
 
   		-f FILE, 		--file FILE 				File to load
