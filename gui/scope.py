@@ -6,6 +6,8 @@ import ssdeep
 import pefile
 import json
 import string
+import yara
+import os
 
 from datetime import datetime
 from M2Crypto import SMIME, X509, BIO, m2
@@ -84,9 +86,7 @@ def get_md5(filename):
         return str(pesha.hexdigest()).upper()
 
 def get_file_magic(path):
-    m = magic.open(magic.MAGIC_MIME)
-    m.load()
-    return str(m.file(path))
+    return magic.from_file(path)
 
 def get_ssdeep(path):
     try:
@@ -325,3 +325,20 @@ def get_vtreport(vtkey=None,sha256=None):
             return {"link": permalink, "pos": out1, "res": out2}
         else:
             return None
+
+def yara_scan(path):
+    yarpath = os.path.join(os.getcwd(),"gui/yara/")
+    fps = {rule_file: os.path.join(path, rule_file) for path, _, files in os.walk(yarpath) for rule_file in files if not rule_file.startswith('.')}
+    rules = yara.compile(filepaths=fps) 
+
+    hits = set([])
+
+    with open(path, "rb") as fin:
+        fdata = fin.read()
+    
+    for res in rules.match(data=fdata):
+        if "dup" not in str(res).lower() and "diablo" not in str(res).lower():
+            res = str(res).replace("_"," ").split()
+            hits.add(" ".join(res))
+
+    return hits

@@ -110,6 +110,7 @@ class FileManager:
 
     def update_windows(self): 
         self.static.task(self.filename)
+        self.static.yara_task(self.filename)
         self.static.vinfo_task(self.filename)
         self.static.siginfo_task(self.filename)
         self.strings.task(self.filename)

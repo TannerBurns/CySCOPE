@@ -1,4 +1,5 @@
 import os
+import yara
 
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -130,8 +131,29 @@ class StaticWindow(QTabWidget):
         
         self.tab1.setWidget(staticw)
 
-        self.tab2 = QWidget()
+        self.tab2 = QScrollArea()
+        self.tab2.setStyleSheet("font-size:12px;")
         self.addTab(self.tab2, 'Yara')
+        self.tab2.setWidgetResizable(True)
+
+        yaraw = QWidget()
+        yaral = QVBoxLayout(yaraw)
+        yaral.setAlignment(Qt.AlignTop)
+        yaral.setSpacing(0)
+
+        peidw = QWidget()
+        peidlay = QVBoxLayout(peidw)
+        self.peid = QTextEdit()
+        self.peid.setReadOnly(True)
+        self.peid.setStyleSheet("border: 0px;")
+        self.peid.setMaximumWidth(500)
+        self.peid.setMinimumWidth(500)
+        peidlay.addWidget(self.peid)
+
+        yaral.addWidget(peidw)
+
+        self.tab2.setWidget(yaraw)
+
 
     def update(self, output):
         if output["md5"]:
@@ -165,16 +187,35 @@ class StaticWindow(QTabWidget):
             worker.signals.ERROR.connect(self._error)
 
             self.mw.threadpool.start(worker)
+    
+    def yara_task(self, filename):
+        self.filename=filename
+        if self.filename:
+            worker = Worker(self.start_yara)
+            worker.signals.RESULT.connect(self.yara_output)
+            worker.signals.FINISHED.connect(self.yara_complete)
+            worker.signals.ERROR.connect(self._error)
+
+            self.mw.threadpool.start(worker)
         
     def _output(self, output):
         self.hashes = output
         output["magic"] = get_file_magic(self.filename)
         self.update(output)
+    
+    def yara_output(self, output):
+        if output:
+            self.peid.setText("\n".join(output))
 
     def _complete(self):
         #self.tabs.progress+=1
         #self.tabs.tab1ui.progressBar.setValue(self.tabs.progress)
         print('Completed Static')
+    
+    def yara_complete(self):
+        #self.tabs.progress+=1
+        #self.tabs.tab1ui.progressBar.setValue(self.tabs.progress)
+        print('Completed Yara')
     
     def _error(self,s):
         print(str(s))
@@ -182,6 +223,11 @@ class StaticWindow(QTabWidget):
     def start(self, progress_callback):
         progress_callback.emit(1)
         output = get_hashes(self.filename)
+        return output
+    
+    def start_yara(self, progress_callback):
+        progress_callback.emit(1)
+        output = yara_scan(self.filename)
         return output
     
     def vinfo_task(self, filename):
