@@ -10,3 +10,4 @@ python-magic==0.4.15
 sip==4.19.8
 six==1.11.0
 ssdeep==3.3
+yara-python==3.7.0

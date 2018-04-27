@@ -128,7 +128,15 @@ def get_sections(pe):
             else:
                 perm=perm.format('')
 
-        data.append('{:<8} {:>10} {:>10} {:>10} {:>10} {:>30} {:<10}'.format(section.Name.decode("utf-8"),str(hex(int(section.Misc_VirtualSize))),str(hex(int(section.VirtualAddress))),str(hex(int(section.Misc_PhysicalAddress))),str(hex(int(section.PointerToRawData))),str(section.get_hash_md5()),perm))
+        sname = section.Name.decode("utf-8") or ""
+        svsize = str(hex(int(section.Misc_VirtualSize))) or ""
+        svaddr = str(hex(int(section.VirtualAddress))) or ""
+        spaddr = str(hex(int(section.Misc_PhysicalAddress))) or ""
+        spdata = str(hex(int(section.PointerToRawData))) or ""
+        smd5 = str(section.get_hash_md5()) or ""
+        sperm = perm or ""
+
+        data.append('{:<8} {:>10} {:>10} {:>10} {:>10} {:>30} {:<10}'.format(sname,svsize,svaddr,spaddr,spdata,smd5,sperm))
 
     return data
 

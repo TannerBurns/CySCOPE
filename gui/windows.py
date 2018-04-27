@@ -632,12 +632,11 @@ class SectionsWindow(QWidget):
             if i > 2:
                 if "EXECUTE" in line:
                     self.edit.append('<pre style="color:red;font-family:Courier;">{}</pre>'.format(line))
-                    self.edit.append('')
+                    self.edit.append(' ')
                 else:
                     self.edit.append(line)
             else:
                 self.edit.append(line)
-            #self.edit.setPlainText(output)
     
     def task(self, filename):
         self.filename= filename
